@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment Variables (NEVER commit secrets!)
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent tools
+.workbuddy/
+.codebuddy/
+
+# Logs (runtime)
+*.log
+logs/*
+!logs/.gitkeep
+
+# Output (runtime, demo 产生的日报文件)
+output/*
+!output/.gitkeep
+
+# Data (runtime, 执行历史/PID 文件)
+data/*
+!data/.gitkeep

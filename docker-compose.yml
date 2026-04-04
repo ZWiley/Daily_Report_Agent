@@ -1,0 +1,73 @@
+# ============================================================
+#  Astribot Daily Agent — Docker Compose 生产部署
+# ============================================================
+#  一键启动:  docker-compose up -d
+#  查看日志:  docker-compose logs -f
+#  查看状态:  docker-compose exec daily-agent python -m agent.main status
+#  查看历史:  docker-compose exec daily-agent python -m agent.main history
+#  手动执行:  docker-compose exec daily-agent python -m agent.main run
+#  停止服务:  docker-compose down
+# ============================================================
+
+services:
+  daily-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: astribot-daily-agent:latest
+    container_name: astribot-daily-agent
+    restart: unless-stopped
+
+    # ---------- 环境变量 ----------
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Shanghai
+
+    # ---------- 数据持久化 ----------
+    volumes:
+      - agent-data:/app/data          # 执行历史 (execution_history.json)
+      - agent-logs:/app/logs          # 运行日志
+      - agent-output:/app/output      # 生成的日报 + 飞书文档归档
+
+    # ---------- 健康检查 ----------
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /app/data/scheduler.pid && kill -0 $$(cat /app/data/scheduler.pid) 2>/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # ---------- 资源限制 ----------
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+
+    # ---------- 日志管理 ----------
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
+        tag: "astribot-agent"
+
+    # ---------- 网络 ----------
+    networks:
+      - agent-net
+
+networks:
+  agent-net:
+    driver: bridge
+
+volumes:
+  agent-data:
+    name: astribot-agent-data
+  agent-logs:
+    name: astribot-agent-logs
+  agent-output:
+    name: astribot-agent-output

@@ -1,0 +1,108 @@
+{
+  "name": "daily-report-agent",
+  "version": "2.0.0",
+  "description": "Astribot 团队日报 Agent：自动采集 GitLab 提交，生成智能日报并推送飞书",
+  "tools": [
+    "fetch_developers",
+    "collect_commits",
+    "generate_summary",
+    "check_report_quality",
+    "send_to_feishu_group",
+    "write_to_feishu_doc",
+    "query_history"
+  ],
+  "guardrails": {
+    "max_steps": 12,
+    "max_retries": 2,
+    "token_budget": 20000,
+    "required_quality_score": 6,
+    "blocked_tools": []
+  },
+  "memory": {
+    "short_term": "current_run_context",
+    "long_term": "data/execution_history.json"
+  },
+  "schedule": {
+    "default_cron": "0 9 * * 1-5",
+    "timezone": "Asia/Shanghai"
+  },
+  "execution_plan": [
+    {
+      "id": "fetch_developers",
+      "kind": "tool",
+      "tool": "fetch_developers",
+      "store": "developers",
+      "failure_message": "读取开发者名单失败",
+      "on_failure": "fail"
+    },
+    {
+      "id": "collect_commits",
+      "kind": "tool",
+      "tool": "collect_commits",
+      "params": {
+        "developers": "$developers"
+      },
+      "store": "developer_commits",
+      "after_step": "sync_commit_collection",
+      "failure_message": "GitLab 采集失败",
+      "on_failure": "fail"
+    },
+    {
+      "id": "generate_report",
+      "kind": "summary_loop",
+      "generate_tool": "generate_summary",
+      "quality_tool": "check_report_quality",
+      "generate_params": {
+        "developer_commits": "$developer_commits",
+        "report_date": "$report_date"
+      },
+      "quality_params": {
+        "report_content": "$markdown_content",
+        "expected_developers": "$active_developers",
+        "expected_commits": "$report.total_commits"
+      },
+      "store": "markdown_content",
+      "max_retries": "$guardrails.max_retries",
+      "min_quality": "$guardrails.required_quality_score",
+      "fallback_action": "use_fallback_report",
+      "after_step": "sync_markdown",
+      "failure_message": "LLM 生成失败"
+    },
+    {
+      "id": "deliver_report",
+      "kind": "output_group",
+      "channels": [
+        {
+          "id": "feishu_group",
+          "tool": "send_to_feishu_group",
+          "params": {
+            "markdown_content": "$markdown_content"
+          },
+          "success_values": [
+            "sent"
+          ],
+          "skip_values": [
+            "skipped"
+          ],
+          "failure_message": "飞书群推送失败"
+        },
+        {
+          "id": "feishu_doc",
+          "tool": "write_to_feishu_doc",
+          "params": {
+            "markdown_content": "$markdown_content",
+            "report_date": "$report_date"
+          },
+          "success_values": [
+            "written"
+          ],
+          "skip_values": [
+            "skipped"
+          ],
+          "failure_message": "飞书文档写入失败"
+        }
+      ],
+      "after_step": "evaluate_output_results"
+    }
+  ]
+}

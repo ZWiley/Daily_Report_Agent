@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd 守护进程配置
+  ===========================
+  安装:
+    cp deploy/astribot-daily-agent.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/astribot-daily-agent.plist
+
+  卸载:
+    launchctl unload ~/Library/LaunchAgents/astribot-daily-agent.plist
+
+  查看状态:
+    launchctl list | grep astribot
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.astribot.daily-agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- 请替换为实际的 Python 路径 -->
+        <string>/usr/local/bin/python3</string>
+        <string>-m</string>
+        <string>agent.main</string>
+        <string>schedule</string>
+    </array>
+
+    <!-- 请替换为项目实际路径 -->
+    <key>WorkingDirectory</key>
+    <string>/opt/astribot-daily-agent</string>
+
+    <!-- 登录后自动启动 -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- 崩溃后自动重启 -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!-- 日志 -->
+    <key>StandardOutPath</key>
+    <string>/opt/astribot-daily-agent/logs/launchd_stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/opt/astribot-daily-agent/logs/launchd_stderr.log</string>
+
+    <!-- 环境变量 -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>TZ</key>
+        <string>Asia/Shanghai</string>
+    </dict>
+</dict>
+</plist>

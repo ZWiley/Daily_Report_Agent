@@ -1,0 +1,57 @@
+# ====================================================
+# Linux systemd 守护进程配置
+# ====================================================
+# 安装:
+#   sudo cp deploy/astribot-daily-agent.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable astribot-daily-agent   # 开机自启
+#   sudo systemctl start astribot-daily-agent    # 立即启动
+#
+# 管理:
+#   sudo systemctl status astribot-daily-agent   # 查看状态
+#   sudo systemctl stop astribot-daily-agent     # 停止
+#   sudo journalctl -u astribot-daily-agent -f   # 查看日志
+# ====================================================
+
+[Unit]
+Description=Astribot Daily Report Agent - 自动化团队日报
+Documentation=https://github.com/astribot/daily-agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=astribot
+Group=astribot
+
+# 请替换为实际路径
+WorkingDirectory=/opt/astribot-daily-agent
+ExecStart=/opt/astribot-daily-agent/.venv/bin/python -m agent.main schedule
+
+# 环境
+Environment=TZ=Asia/Shanghai
+EnvironmentFile=/opt/astribot-daily-agent/.env
+
+# 自动重启
+Restart=on-failure
+RestartSec=30
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+# 资源限制
+MemoryMax=512M
+CPUQuota=50%
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=astribot-daily-agent
+
+# 安全
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/astribot-daily-agent/data /opt/astribot-daily-agent/logs /opt/astribot-daily-agent/output
+
+[Install]
+WantedBy=multi-user.target

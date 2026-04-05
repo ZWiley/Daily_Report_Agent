@@ -213,6 +213,7 @@ python3 -m pytest tests -q        # 35 passed
 
 - [📖 产品使用指南](docs/usage-guide.md) — 零门槛，面向产品/管理者
 - [🏗️ 架构设计方案](docs/architecture.md) — Harness 工程方案，面向开发者
+- [🗣️ Prompts 记录](docs/prompts-log.md) — 我是怎么跟 AI 协作实现这个系统的
 
 ---
 

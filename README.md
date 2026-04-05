@@ -1,4 +1,4 @@
-# 🤖 Astribot Daily Report Agent
+# Daily Report Agent
 
 > **声明式 Tool Harness + 质量门控制**  
 > 一个面向交付的团队日报 Agent：读取飞书人员表、采集 GitLab 提交、用 AI 生成日报，并通过 execution plan 驱动推送到飞书。
